@@ -177,3 +177,9 @@ wandb/
 swanlog/
 generated_predictions.jsonl
 predictions_score.json
+*.txt
+*.json
+*.jinja
+*.xlsx
+export
+saves

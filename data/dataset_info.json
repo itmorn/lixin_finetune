@@ -2,6 +2,9 @@
   "identity": {
     "file_name": "identity.json"
   },
+  "identity_tongtong": {
+    "file_name": "identity_tongtong.json"
+  },
   "alpaca_en_demo": {
     "file_name": "alpaca_en_demo.json"
   },
