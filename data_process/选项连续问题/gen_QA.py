@@ -60,6 +60,6 @@ def 用选项内的值加随机区间构造QA(lst_option,count=100): # 一般是
             if option.left>max_point:
                 continue
             lst_A.append(idx)
-        lst_QA.append({"type": "区间内", "Q": [point_choice1, point_choice2], "A": lst_A})
+        lst_QA.append({"type": "区间内", "Q": [min_point, max_point], "A": lst_A})
 
     return lst_QA

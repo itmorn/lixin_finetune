@@ -65,13 +65,13 @@ def 对连续值去重(output_path_连续, txt_output_path):
     df_去重 = df_连续.drop_duplicates(subset=['三级要素', '二三级要素可选值'])
     
     # 提取去重后的结果，并去除空值
-    unique_pairs = df_去重[['三级要素', '二三级要素可选值']].dropna()
+    unique_pairs = df_去重[['一级要素', '二级要素', '三级要素', '二三级要素可选值']].dropna()
     
     
     # 保存到txt文件
     with open(txt_output_path, 'w', encoding='utf-8') as f:
         for _, row in unique_pairs.iterrows():
-            f.write(f"{row['三级要素']}____{row['二三级要素可选值']}\n")
+            f.write(f"{row['一级要素']}##{row['二级要素']}##{row['三级要素']}____{row['二三级要素可选值']}\n")
     
     print(f"\n去重完成:")
     print(f"唯一值已保存到: {txt_output_path}")
@@ -111,14 +111,16 @@ def 根据选项构造QA模板(txt_output_path,jsn_output_path,jsn_output_path_Q
 def 根据选项构造多个问题和答案(jsn_output_path_QA_tmp, jsn_output_path_QA, jsn_output_path_QA_tmp_map_modify):
     with open(jsn_output_path_QA_tmp, 'r', encoding='utf-8') as f:
         dic_可选值_要素 = json.load(f)
+        
     map_tmp = json.load(open(jsn_output_path_QA_tmp_map_modify, 'r', encoding='utf-8'))
     for 可选值, dic_value in dic_可选值_要素.items():
         lst_要素 = dic_value['lst_要素']
         lsr_QA = dic_value['QA']
         dic_map = map_tmp[可选值]
+        dic_value['dic_map'] = dic_map
         if dic_map['is_math']:
-            has_percent = "%" in 可选值
-            factor = dic_map['factor']
+            if 'delete' in dic_map:
+                continue
             str_format = dic_map['format'].replace("%", "")
             # if str_format=="0;1-3;3-5;>5":
             #     print()
@@ -129,8 +131,6 @@ def 根据选项构造多个问题和答案(jsn_output_path_QA_tmp, jsn_output_p
             lsr_QA.extend(lst_QA_part)
             lst_QA_part = 用选项内的值加随机区间构造QA(lst_option,count=100) # 一般是多选
             lsr_QA.extend(lst_QA_part)
-            dic_value['has_percent'] = has_percent
-            dic_value['factor'] = factor
             pass
         else:
             pass
@@ -151,19 +151,19 @@ if __name__ == '__main__':
 
     # 对连续值去重并保存到txt
     txt_output_path = path.replace('.xlsx', '_连续唯一值.txt')
-    # 对连续值去重(output_path_连续, txt_output_path)
+    对连续值去重(output_path_连续, txt_output_path)
 
     jsn_output_path_QA_tmp = path.replace('.xlsx', '_QA模板.json')
     jsn_output_path_QA_tmp_map = path.replace('.xlsx', '_QA模板映射待编辑.json')  # 生成之后复制一份 改名为已编辑
-    # 根据选项构造QA模板(txt_output_path,jsn_output_path_QA_tmp,jsn_output_path_QA_tmp_map)
+    根据选项构造QA模板(txt_output_path,jsn_output_path_QA_tmp,jsn_output_path_QA_tmp_map)
 
     
     jsn_output_path_QA = path.replace('.xlsx', '_问题和答案.json')
     jsn_output_path_QA_tmp_map_modify = path.replace('.xlsx', '_QA模板映射已编辑.json')
-    # 根据选项构造多个问题和答案(jsn_output_path_QA_tmp, # 空list
-    #               jsn_output_path_QA, # 保存的文件
-    #               jsn_output_path_QA_tmp_map_modify #借助映射表
-    #               )
+    根据选项构造多个问题和答案(jsn_output_path_QA_tmp, # 空list
+                  jsn_output_path_QA, # 保存的文件
+                  jsn_output_path_QA_tmp_map_modify #借助映射表
+                  )
 
     
     pass
