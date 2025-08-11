@@ -615,6 +615,20 @@
       "assistant_tag": "assistant"
     }
   },
+  "品类要素信息_连续值微调数据集": {
+    "file_name": "品类要素信息_连续值微调数据集.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant",
+      "system_tag": "system"
+    }
+  },
   "kto_mix_en": {
     "hf_hub_url": "argilla/kto-mix-15k",
     "formatting": "sharegpt",
