@@ -183,3 +183,4 @@ predictions_score.json
 *.xlsx
 export
 saves
+data_process/question_with_continuous_choices/*.csv

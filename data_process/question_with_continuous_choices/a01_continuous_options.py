@@ -54,8 +54,8 @@ def analyze_values_in_excel(path,output_path_continuous,output_path_incontinuous
         else:
             df_incontinuous = pd.concat([df_incontinuous, row.to_frame().T], ignore_index=True)
     
-    df_continuous.to_excel(output_path_continuous, index=False)
-    df_incontinuous.to_excel(output_path_incontinuous, index=False)
+    df_continuous.to_csv(output_path_continuous, index=False)
+    df_incontinuous.to_csv(output_path_incontinuous, index=False)
     
     print(f"\n分割完成:")
     print(f"连续值数据已保存到: {output_path_continuous}")
@@ -63,7 +63,7 @@ def analyze_values_in_excel(path,output_path_continuous,output_path_incontinuous
 
 def remove_redundancy_for_continuous_values(output_path_continuous, txt_output_path):
     # 读取连续值Excel文件
-    df_continuous = pd.read_excel(output_path_continuous)
+    df_continuous = pd.read_csv(output_path_continuous)
 
     df_continuous['二三级要素可选值'] = df_continuous['二三级要素可选值'].str.replace('；', ';', regex=False)    
     df_continuous['三级要素'] = df_continuous['三级要素'].str.replace('（', '(', regex=False).str.replace('）', ')', regex=False)    
@@ -114,64 +114,6 @@ def construct_QAtemplate(txt_output_path,jsn_output_path,jsn_output_path_QA_tmp_
     print(f"问题和答案已保存到: {jsn_output_path}")
 
 
-def postprocess_QAtemplate(jsn_output_path_QA_tmp_map,jsn_output_path_QA_tmp_map_modify):
-    with open(jsn_output_path_QA_tmp_map, 'r', encoding='utf-8') as f:
-        dic_choices_empty = json.load(f)
-    
-    dic_choices_modified = {}
-    for choices in dic_choices_empty:
-        tmp = dic_choices_empty[choices]
-        str_format = tmp['format']
-        str_format = str_format.replace('，',';')
-        if not any(char.isdigit() for char in str_format):
-            tmp['is_math'] = False
-        str_format = str_format.replace('个','').replace('年','').replace(',','')
-        str_format = str_format.replace('无','0').replace('N/A','0').replace('负增长','<0')
-        if "%" in str_format:
-            tmp['has_percent'] = True
-            str_format = str_format.replace('%','')
-        values = str_format.split(";")
-        newformat = ''
-        for i in range(len(values)):
-            val = values[i]
-            if '以上' in values[i]:
-                values[i] = '>' + val[:-2]
-            else:
-                values[i] = val
-        
-        if tmp['is_math'] and '<' in values[0]:
-            if int(values[0][1:]) >= 100:
-                num_zeros = []
-                for i in range(len(values)):
-                    values[i] = values[i].strip()
-                    if '-' in values[i]:
-                        num1, num2 = int(values[i].split('-')[0]), int(values[i].split('-')[1])
-                        num_zeros.append(trailing_zeros(num1))
-                        num_zeros.append(trailing_zeros(num2))
-                    else:
-                        num_zeros.append(trailing_zeros(int(values[i][1:])))
-                        
-                if min(num_zeros) >= 1:
-                    numzero = min(num_zeros)
-                    tmp['factor'] = 10**numzero
-                    for i in range(len(values)):
-                        if '-' in values[i]:
-                            num1, num2 = values[i].split('-')[0], values[i].split('-')[1]
-                            values[i] = num1[:-numzero] + '-' + num2[:-numzero]
-                        else:
-                            values[i] = values[i][:-numzero]
-                    
-            
-        newformat = ';'.join(values)
-        tmp['format'] = newformat
-        dic_choices_modified[choices] = tmp
-        
-    json_str = json.dumps(dic_choices_modified, indent=2, ensure_ascii=False)
-    with open(jsn_output_path_QA_tmp_map_modify, 'w', encoding='utf-8') as f:
-        f.write(json_str)
-    
-    print(f"\nQA模板已修改")
-
 def construct_QA_from_choices(jsn_output_path_QA_tmp, jsn_output_path_QA_tmp_map_modify, jsn_output_path_QA):
     with open(jsn_output_path_QA_tmp, 'r', encoding='utf-8') as f:
         dic_choices_element = json.load(f)
@@ -208,31 +150,23 @@ def construct_QA_from_choices(jsn_output_path_QA_tmp, jsn_output_path_QA_tmp_map
 if __name__ == '__main__':
     # 通过切分的形式 发现连续值
     path = "data_process/question_with_continuous_choices/品类要素信息.xlsx"
-    output_path_continous = path.replace('.xlsx', '_连续.xlsx')
-    output_path_incontinous = path.replace('.xlsx', '_非连续.xlsx')
-    # 分析excel连续值(path,output_path_连续,output_path_非连续)
-    # analyze_values_in_excel(path,output_path_continous,output_path_incontinous)
+    output_path_continous = path.replace('.xlsx', '_连续.csv')
+    output_path_incontinous = path.replace('.xlsx', '_非连续.csv')
+    # 分析数据，得到连续值和非连续值
+    analyze_values_in_excel(path,output_path_continous,output_path_incontinous) 
 
     # # 对连续值去重并保存到txt
     txt_output_path = path.replace('.xlsx', '_连续唯一值.txt')
-    # remove_redundancy_for_continuous_values(output_path_continous, txt_output_path)
+    remove_redundancy_for_continuous_values(output_path_continous, txt_output_path)
 
     jsn_output_path_QA_tmp = path.replace('.xlsx', '_QA模板.json')
     jsn_output_path_QA_tmp_map = path.replace('.xlsx', '_QA模板映射待编辑.json')
-    # construct_QAtemplate(txt_output_path,jsn_output_path_QA_tmp,jsn_output_path_QA_tmp_map)
-    #这步以后手动修改四处，分别为 1000;1000-3000;3000-5000;5000-10000;>1000 -> 1000;1000-3000;3000-5000;5000-10000;>10000
-    # <2020;20-50;50-100;>100 -> <20;20-50;50-100;>100
-    # 无;1-3个;3-5个;5-个以上 -》 无;1-3个;3-5个;5个以上
-    # <12;>24;>48;>72 添加 delete:True
-    
-    jsn_output_path_QA_tmp_map_modify = path.replace('.xlsx', '_QA模板映射已编辑.json')
-    postprocess_QAtemplate(jsn_output_path_QA_tmp_map,jsn_output_path_QA_tmp_map_modify)
+    construct_QAtemplate(txt_output_path,jsn_output_path_QA_tmp,jsn_output_path_QA_tmp_map)
     
     jsn_output_path_QA = path.replace('.xlsx', '_问题和答案.json')
-    construct_QA_from_choices(jsn_output_path_QA_tmp, # 空list
+    jsn_output_path_QA_tmp_map_modify = path.replace('.xlsx', '_QA模板映射已编辑.json')
+    construct_QA_from_choices(jsn_output_path_QA_tmp, # 未来向空list里添加数据
                   jsn_output_path_QA_tmp_map_modify, #借助映射表
                   jsn_output_path_QA # 保存的文件
                   )
 
-    
-    pass
