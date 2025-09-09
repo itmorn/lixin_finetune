@@ -1,6 +1,6 @@
 import random
 
-def 用选项内的值构造QA(lst_option,count=100): # 一般是单选
+def generate_QA_from_choices(lst_option,count=100): # 一般是单选 用选项内的值构造QA
     lst_QA = []
     for _ in range(count):
         option_choice = random.choice(lst_option)
@@ -14,7 +14,7 @@ def 用选项内的值构造QA(lst_option,count=100): # 一般是单选
 
     return lst_QA
 
-def 用选项内的值加左右无穷构造QA(lst_option,count=100): # 一般是多选
+def generate_QA_from_choices_addinf(lst_option,count=100): # 一般是多选  用选项内的值加左右无穷构造QA
     lst_QA = []
     for _ in range(count//2):
         option_choice = random.choice(lst_option)
@@ -43,7 +43,7 @@ def 用选项内的值加左右无穷构造QA(lst_option,count=100): # 一般是
     return lst_QA
   
 
-def 用选项内的值加随机区间构造QA(lst_option,count=100): # 一般是多选
+def generate_QA_from_choices_addrandomrange(lst_option,count=100): # 一般是多选
     lst_QA = []
     while len(lst_QA) < count:
         point_choice1 = random.choice(lst_option).gen_point()
